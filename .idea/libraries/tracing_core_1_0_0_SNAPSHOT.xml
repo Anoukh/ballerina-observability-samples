@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="tracing-core-1.0.0-SNAPSHOT">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../ballerina-observability/modules/tracing-core/target/tracing-core-1.0.0-SNAPSHOT.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
