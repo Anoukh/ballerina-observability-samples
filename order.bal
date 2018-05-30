@@ -66,9 +66,10 @@ function getProductsForOrder (int id) returns Order {
     int count = 0;
     sql:Parameter p1 = {sqlType:sql:TYPE_INTEGER, value:id};
     var temp = testDB -> select("SELECT * FROM ORDERS WHERE orderId = ?", OrderEntry, p1);
+    observe:Span span = observe:startSpan("Getting Products for Order " + <string>id, userTrace = true);
     table<OrderEntry> dt = check temp;
-    observe:Span span = observe:startSpan("OrderService", "Calling Product Service");
     foreach p in dt {
+        observe:Span span2 = observe:startSpan("Product with Id " + p.productId, userTrace = true);
         http:Request req = new;
         var resp = ep -> get("/ProductService/getProduct?productId=" + untaint p.productId);
         match resp {
@@ -81,12 +82,15 @@ function getProductsForOrder (int id) returns Order {
                         vProducts[count] = product;
                         count = count + 1;
                         total = total + product.price;
+                        _ = span2.addTag("Name", product.name);
+                        _ = span2.addTag("Price", <string>product.price);
                     }
                 }
             }
         }
+        _ = span2.finish();
     }
-    _ = span.addTag("Orders", "Successful");
+    _ = span.addTag("Total", <string>total);
     _ = span.finish();
     Order orders = {};
     orders.id = id;

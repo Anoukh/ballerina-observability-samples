@@ -32,7 +32,7 @@ service StoreService bind storeServiceEndpoint {
         map qParams = req.getQueryParams();
         string sId = <string> qParams["orderId"];
         int orderId = (<int> sId) but {error => 0};
-        observe:Span span = observe:startSpan("StoreService", "Get order span");
+        observe:Span span = observe:startSpan("Getting Total Order", userTrace = true);
         json o = <json> getOrder(orderId) but {error => {}};
         http:Response res = new;
         res.setJsonPayload(o);
