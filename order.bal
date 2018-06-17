@@ -35,6 +35,8 @@ service OrderService bind orderServiceEndpoint {
         path:"/getOrder"
     }
     getOrder(endpoint outboundEP, http:Request req) {
+        int spanId = observe:startRootSpan("Latency Measure");
+        int spanId2 = check observe:startSpan("Latency Measure", parentSpanId = spanId);
         map qParams = req.getQueryParams();
         string sId = <string> qParams["orderId"];
         int orderId = <int> sId but {error => 0};
@@ -42,6 +44,8 @@ service OrderService bind orderServiceEndpoint {
         json o = <json> orders but {error => {}};
         http:Response res = new;
         res.setJsonPayload(o);
+        _ = observe:finishSpan(spanId2);
+        _ = observe:finishSpan(spanId);
         _ = outboundEP -> respond(res);
     }
 }
@@ -66,10 +70,10 @@ function getProductsForOrder (int id) returns Order {
     int count = 0;
     sql:Parameter p1 = {sqlType:sql:TYPE_INTEGER, value:id};
     var temp = testDB -> select("SELECT * FROM ORDERS WHERE orderId = ?", OrderEntry, p1);
-    observe:Span span = observe:startSpan("Getting Products for Order " + <string>id, userTrace = true);
+    int spanId = check observe:startSpan("Getting Products for Order " + <string>id);
     table<OrderEntry> dt = check temp;
     foreach p in dt {
-        observe:Span span2 = observe:startSpan("Product with Id " + p.productId, userTrace = true);
+        int spanId2 = check observe:startSpan("Product with Id " + p.productId);
         http:Request req = new;
         var resp = ep -> get("/ProductService/getProduct?productId=" + untaint p.productId);
         match resp {
@@ -82,16 +86,16 @@ function getProductsForOrder (int id) returns Order {
                         vProducts[count] = product;
                         count = count + 1;
                         total = total + product.price;
-                        _ = span2.addTag("Name", product.name);
-                        _ = span2.addTag("Price", <string>product.price);
+                        _ = observe:addTagToSpan(spanId2, "Name", product.name);
+                        _ = observe:addTagToSpan(spanId2, "Price", <string>product.price);
                     }
                 }
             }
         }
-        _ = span2.finish();
+        _ = observe:finishSpan(spanId2);
     }
-    _ = span.addTag("Total", <string>total);
-    _ = span.finish();
+    _ = observe:addTagToSpan(spanId, "Total", <string>total);
+    _ = observe:finishSpan(spanId);
     Order orders = {};
     orders.id = id;
     orders.total = total;

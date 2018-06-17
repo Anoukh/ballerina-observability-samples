@@ -32,12 +32,12 @@ service StoreService bind storeServiceEndpoint {
         map qParams = req.getQueryParams();
         string sId = <string> qParams["orderId"];
         int orderId = (<int> sId) but {error => 0};
-        observe:Span span = observe:startSpan("Getting Total Order", userTrace = true);
+        int spanId = check observe:startSpan("Getting Total Order");
         json o = <json> getOrder(orderId) but {error => {}};
         http:Response res = new;
         res.setJsonPayload(o);
         _ = outboundEP -> respond(res);
-        _ = span.finish();
+        _ = observe:finishSpan(spanId);
     }
 }
 
@@ -47,8 +47,7 @@ function getOrder (int orderId) returns Order {
         url:"http://localhost:9091"
     };
 
-    http:Request req = new;
-    var resp = ep -> get("/OrderService/getOrder?orderId=" + untaint orderId, request = req);
+    var resp = ep -> get("/OrderService/getOrder?orderId=" + untaint orderId);
     match resp {
         error err => {
             return {};

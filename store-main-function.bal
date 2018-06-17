@@ -17,9 +17,9 @@ type Product {
 };
 
 function main(string... args) {
-    observe:Span span = observe:startSpan("Get order span", userTrace = true);
+    int spanId = check observe:startSpan("Get order span");
     io:println(getOrder(1));
-    _ = span.finish();
+    _ = observe:finishSpan(spanId);
     runtime:sleep(5000); // To allow time for spans to get published
 }
 
@@ -29,8 +29,7 @@ function getOrder (int orderId) returns Order {
         url:"http://localhost:9091"
     };
 
-    http:Request req = new;
-    var resp = ep -> get("/OrderService/getOrder?orderId=" + untaint orderId, request = req);
+    var resp = ep -> get("/OrderService/getOrder?orderId=" + untaint orderId);
     match resp {
         error err => {
             return {};
