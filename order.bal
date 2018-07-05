@@ -8,20 +8,20 @@ endpoint http:Listener orderServiceEndpoint {
     port:9091
 };
 
-type Product {
+type Product record {
     int id;
     string name;
     float price;
 };
 
-type Order {
+type Order record {
     int id;
     float total;
     boolean processed = false;
     Product[] products;
 };
 
-type OrderEntry {
+type OrderEntry record {
     int orderId;
     int productId;
 };
@@ -43,7 +43,7 @@ service OrderService bind orderServiceEndpoint {
         Order orders = getProductsForOrder(orderId);
         json o = <json> orders but {error => {}};
         http:Response res = new;
-        res.setJsonPayload(o);
+        res.setJsonPayload(untaint o);
         _ = observe:finishSpan(spanId2);
         _ = observe:finishSpan(spanId);
         _ = outboundEP -> respond(res);

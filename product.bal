@@ -3,7 +3,7 @@ import ballerina/sql;
 import ballerina/mysql;
 import ballerina/observe;
 
-type Product {
+type Product record {
     int id;
     string name;
     float price;
@@ -27,7 +27,7 @@ service ProductService bind productServiceEndpoint {
         int id = <int> sId but {error => 0};
         json p = <json> getProductFromDB(id) but {error => {}};
         http:Response res = new;
-        res.setJsonPayload(p);
+        res.setJsonPayload(untaint p);
         _ = outboundEP -> respond(res);
     }
 }

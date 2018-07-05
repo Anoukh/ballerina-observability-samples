@@ -7,13 +7,13 @@ endpoint http:Listener storeServiceEndpoint {
     port:9090
 };
 
-type Product {
+type Product record {
     int id;
     string name;
     float price;
 };
 
-type Order {
+type Order record {
     int id;
     float total;
     boolean processed = false;
@@ -35,7 +35,7 @@ service StoreService bind storeServiceEndpoint {
         int spanId = check observe:startSpan("Getting Total Order");
         json o = <json> getOrder(orderId) but {error => {}};
         http:Response res = new;
-        res.setJsonPayload(o);
+        res.setJsonPayload(untaint o);
         _ = outboundEP -> respond(res);
         _ = observe:finishSpan(spanId);
     }
