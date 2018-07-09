@@ -65,7 +65,7 @@ function getProductsForOrder (int id) returns Order {
         url:"http://localhost:9092"
     };
 
-    float total = 0f;
+    float total = 0;
     Product[] vProducts = [];
     int count = 0;
     sql:Parameter p1 = {sqlType:sql:TYPE_INTEGER, value:id};
